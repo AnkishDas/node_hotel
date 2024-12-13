@@ -158,4 +158,100 @@ const getfoodbyrestrurent = async (req, res) => {
         });
     }
 }
-module.exports = { createrfoodcontroler, getAllfoodcontroller, getsinglefoodbyid, getfoodbyrestrurent }
+
+const updatefoodcontroller = async (req, res) => {
+    try {
+        const foodId = req.params.id
+
+        if (!foodId) {
+            return res.status(400).send({
+                success: false,
+                message: 'No food ID provided',
+            });
+        }
+
+        const food = await foodmodel.findById(foodId);
+        if (!food) {
+            return res.status(500).send({
+                success: false,
+                message: 'there is no food',
+
+            });
+        }
+        const {
+            title,
+            description,
+            price,
+            imgUrl,
+            foodTags,
+            category,
+            code,
+            isAvailable,
+            restaurant,
+            rating,
+            ratingCount,
+        } = req.body;
+
+        const updatedFood = await foodmodel.findByIdAndUpdate(foodId, {
+            title,
+            description,
+            price,
+            imgUrl,
+            foodTags,
+            category,
+            code,
+            isAvailable,
+            restaurant,
+            rating,
+            ratingCount,
+        }
+            , { new: true })
+        return res.status(200).send({
+            success: true,
+            message: 'Food item updated successfully!',
+            updatedFood,
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: 'Error while creating food item',
+            error: error.message || 'Internal Server Error', // Use a fallback message
+        });
+    }
+}
+
+const deletefoodcontroller = async (req, res) => {
+    try {
+        const foodId = req.params.id
+
+        if (!foodId) {
+            return res.status(400).send({
+                success: false,
+                message: 'No food ID provided',
+            });
+        }
+
+        const food = await foodmodel.findById(foodId);
+        if (!food) {
+            return res.status(500).send({
+                success: false,
+                message: 'there is no food',
+
+            });
+        }
+        await foodmodel.findByIdAndDelete(foodId)
+        return res.status(200).send({
+            success: true,
+            message: 'Food item deleted successfully!',
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: 'Error while creating food item',
+            error: error.message || 'Internal Server Error', // Use a fallback message
+        });
+    }
+}
+module.exports = { createrfoodcontroler, getAllfoodcontroller, getsinglefoodbyid, getfoodbyrestrurent, updatefoodcontroller, deletefoodcontroller }
