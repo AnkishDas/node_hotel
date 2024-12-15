@@ -1,5 +1,6 @@
 const categoryModel = require("../models/catagoryModel");
 const foodmodel = require("../models/foodmodel");
+const orderModel = require("../models/orderModel");
 
 
 const createrfoodcontroler = async (req, res) => {
@@ -254,4 +255,38 @@ const deletefoodcontroller = async (req, res) => {
         });
     }
 }
-module.exports = { createrfoodcontroler, getAllfoodcontroller, getsinglefoodbyid, getfoodbyrestrurent, updatefoodcontroller, deletefoodcontroller }
+
+const placeOrdercontroller = async (req, res) => {
+    try {
+        const { cart } = req.body
+        if (!cart) {
+            return res.status(500).send({
+                success: false,
+                message: 'please add food cart and payment method',
+                error
+            })
+        }
+        let total = 0;
+        cart.map((i) => {
+            total += i.price
+        })
+
+        const newOrder = new orderModel({
+            food: cart,
+            payment: total,
+            buyer: req.body.id
+        });
+        res.status(201).send({
+            success: true,
+            message: "order placed successfully",
+            newOrder
+        })
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: 'Error while API',
+            error
+        });
+    }
+}
+module.exports = { createrfoodcontroler, getAllfoodcontroller, getsinglefoodbyid, getfoodbyrestrurent, updatefoodcontroller, deletefoodcontroller, placeOrdercontroller }
