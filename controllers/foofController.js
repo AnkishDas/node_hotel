@@ -258,34 +258,72 @@ const deletefoodcontroller = async (req, res) => {
 
 const placeOrdercontroller = async (req, res) => {
     try {
-        const { cart } = req.body
-        if (!cart) {
-            return res.status(500).send({
-                success: false,
-                message: 'please add food cart and payment method',
-                error
-            })
-        }
-        let total = 0;
-        cart.map((i) => {
-            total += i.price
-        })
+        const { cart } = req.body;
 
-        const newOrder = new orderModel({
-            food: cart,
-            payment: total,
-            buyer: req.body.id
+        if (!cart || cart.length === 0) {
+            return res.status(400).send({
+                success: false,
+                message: 'Please add food items to the cart.',
+            });
+        }
+
+        // Calculate total price and collect foodIds from the cart
+        let total = 0;
+        const foodIds = cart.map((item) => {
+            total += item.price;  // Add price to total
+            return item.foodId;  // Use foodId from the request
         });
+
+        // Log the foodIds and total for debugging
+        console.log('Food IDs:', foodIds);
+        console.log('Total Price:', total);
+
+        // Verify if all provided food IDs exist
+        const foodItems = await foodmodel.find({ _id: { $in: foodIds } });
+
+        // Log the result of foodItems query
+        console.log('Food Items found:', foodItems);
+
+        if (foodItems.length !== foodIds.length) {
+            return res.status(400).send({
+                success: false,
+                message: "Some food items in the cart are invalid or do not exist.",
+            });
+        }
+
+        // Ensure buyer info is available
+        if (!req.user || !req.user.id) {
+            return res.status(400).send({
+                success: false,
+                message: "Buyer information is missing.",
+            });
+        }
+
+        // Log the buyer info
+        console.log('Buyer Info:', req.user);
+
+        // Create a new order with the food IDs
+        const newOrder = new orderModel({
+            foods: foodIds,  // Store only the food IDs
+            payment: total,
+            buyer: req.user.id,  // Automatically set the buyer from the authenticated user
+            // You can set the default status here
+        });
+
+        await newOrder.save();
+
         res.status(201).send({
             success: true,
-            message: "order placed successfully",
-            newOrder
-        })
+            message: "Order placed successfully.",
+            newOrder,
+        });
     } catch (error) {
+        console.error('Error in placeOrdercontroller:', error);  // Log the error
+
         res.status(500).send({
             success: false,
-            message: 'Error while API',
-            error
+            message: 'Error while placing order',
+            error: error.message || 'Internal Server Error',
         });
     }
 }
