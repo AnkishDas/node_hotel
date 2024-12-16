@@ -53,52 +53,52 @@ const registerController = async (req, res) => {
 
 const loginController = async (req, res) => {
     try {
-        const { email, password } = req.body
+        const { email, password } = req.body;
         if (!email || !password) {
-            return res.status(500).send({
+            return res.status(400).send({
                 success: false,
-                message: 'please provide email or password'
-            })
+                message: "Please provide email and password",
+            });
         }
-        const user = await userModel.findOne({ email })
+
+        const user = await userModel.findOne({ email });
         if (!user) {
             return res.status(404).send({
                 success: false,
-                message: 'user not found'
-            })
+                message: "User not found",
+            });
         }
 
-
-        //check password
-
-        const isMatch = await bcrypt.compare(password, user.password)
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(500).send({
+            return res.status(401).send({
                 success: false,
-                message: "invalid credential",
-
-            })
+                message: "Invalid credentials",
+            });
         }
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '7d',
-        });
-        user.password = undefined;
+
+        // Generate token with usertype
+        const token = jwt.sign(
+            { id: user._id, usertype: user.usertype }, // Add usertype to payload
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        user.password = undefined; // Hide password in the response
         res.status(200).send({
             success: true,
-            message: 'log in successfull',
+            message: "Login successful",
             user,
-            token
-        })
-
-    }
-    catch (error) {
-        console.log(error)
-
+            token,
+        });
+    } catch (error) {
+        console.error("Login Error:", error);
         res.status(500).send({
             success: false,
-            massage: 'Error in log in API',
-            error
-        })
+            message: "Error in login API",
+            error,
+        });
     }
 }
 

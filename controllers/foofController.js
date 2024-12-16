@@ -327,4 +327,28 @@ const placeOrdercontroller = async (req, res) => {
         });
     }
 }
-module.exports = { createrfoodcontroler, getAllfoodcontroller, getsinglefoodbyid, getfoodbyrestrurent, updatefoodcontroller, deletefoodcontroller, placeOrdercontroller }
+
+const orderstatuscontroller = async (req, res) => {
+    try {
+        const orderid = req.params.id
+        if (!orderid) {
+            return res.status(404).send({
+                success: false,
+                message: 'please provide valid order id'
+            })
+        }
+        const { status } = req.body
+        const order = await orderModel.findByIdAndUpdate(orderid, { status }, { new: true })
+        res.status(200).send({
+            success: true,
+            message: 'ordr updated successfully'
+        })
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: 'Error in order status api',
+            error
+        });
+    }
+}
+module.exports = { createrfoodcontroler, getAllfoodcontroller, getsinglefoodbyid, getfoodbyrestrurent, updatefoodcontroller, deletefoodcontroller, placeOrdercontroller, orderstatuscontroller }
